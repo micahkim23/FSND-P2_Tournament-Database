@@ -15,7 +15,28 @@ CREATE DATABASE tournament;
 CREATE TABLE players (name TEXT, id SERIAL PRIMARY KEY);
 
 
-CREATE TABLE matches(winner_id INTEGER REFERENCES players(id), loser_id INTEGER REFERENCES players(id), match_id SERIAL PRIMARY KEY);
+CREATE TABLE matches(
+	winner_id INTEGER REFERENCES players(id), 
+	loser_id INTEGER REFERENCES players(id), 
+	match_id SERIAL PRIMARY KEY
+);
+
+
+CREATE VIEW wins AS
+SELECT players.id AS winner_id,
+       count(matches.winner_id) AS matches_won
+FROM players
+LEFT JOIN matches ON players.id = matches.winner_id
+GROUP BY players.id;
+
+
+CREATE VIEW numMatches AS
+SELECT players.id AS player_id,
+       COUNT (matches.winner_id) AS num_matches
+FROM players
+LEFT JOIN matches ON players.id = matches.winner_id
+OR players.id = matches.loser_id
+GROUP BY players.id;
 
 
 CREATE VIEW standings AS
@@ -27,20 +48,3 @@ FROM wins
 JOIN players ON players.id = wins.winner_id
 JOIN numMatches ON players.id = numMatches.player_id
 ORDER BY win DESC;
-
-
-CREATE VIEW wins AS
-SELECT players.id AS winner_id,
-       count(matches.winner_id) AS matches_won
-FROM players
-LEFT JOIN matches ON players.id = matches.winner_id
-GROUP BY players.id
-
-
-CREATE VIEW numMatches AS
-SELECT players.id AS player_id,
-       COUNT (matches.winner_id) AS num_matches
-FROM players
-LEFT JOIN matches ON players.id = matches.winner_id
-OR players.id = matches.loser_id
-GROUP BY players.id
